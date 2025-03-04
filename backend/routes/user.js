@@ -5,6 +5,8 @@ const { User } = require("../db");
 const jwt = require("jsonwebtoken");
 const { jwt_secret } = require("../config");
 
+
+// signup
 const signupSchema = zod.object({
     userName: zod.string().email(),
     firstName: zod.string(),
@@ -48,6 +50,7 @@ router.post("/signup", async (req,res) => {
 
 
 
+// signin
 const signinSchema = zod.object({
     userName: zod.string().email(),
     password: zod.string().min(6)
@@ -77,6 +80,62 @@ router.post("/signin", async (req,res) => {
     
     res.json(411).json({
         message: "User does not exist"
+    })
+})
+
+
+
+
+// update
+const updatedSchema = zod.object({
+    firstName: zod.string(),
+    lastName: zod.string(),
+    password: zod.string().min(6)
+})
+
+router.put("/", authMiddleware , async (req,res) => {
+    const body = req.body;
+    const response = updatedSchema.safeparse(body);
+
+    if (!(response.success)) {
+        res.status(411).json({
+            message: "Incorrect inputs"
+        })
+    }
+
+    await User.updateOne({_id: req.userId}, body);
+
+    res.json({
+        message: "User updated successfully"
+    })
+})
+
+
+
+
+// getting list of users
+router.get("/bulk", async (req, res) => {
+    const filter = req.query.filter || "";
+
+    const users = await User.find({
+        $or: [{
+            firstName: {
+                "$regex": filter
+            }
+        }, {
+            lastName: {
+                "$regex": filter
+            }
+        }]
+    })
+
+    res.json({
+        user: users.map(user => ({
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            _id: user._id
+        }))
     })
 })
 
