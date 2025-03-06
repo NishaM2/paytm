@@ -8,7 +8,7 @@ const authMiddleware = (req, res, next) => {
         return res.status(401).json({});
     }
 
-    const token = authHead.split('')[1];
+    const token = authHead.split(' ')[1];
 
     try {
         const decoded = jwt.verify(token, jwt_secret);
@@ -17,11 +17,15 @@ const authMiddleware = (req, res, next) => {
             req.userId = decoded.userId;
             next();
         } else {
-            return res.status(403).json({});
+            return res.status(403).json({
+                message: "Invalid token",
+            });
         }
 
     } catch (error) {
-        return res.status(401).json({});
+        return res.status(401).json({
+            message: "Invalid token2",
+        });
     }
 };
 
